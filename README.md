@@ -1,1 +1,1 @@
-# Practica rxjs
+# Practices RxJS
