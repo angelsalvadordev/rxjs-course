@@ -1,4 +1,4 @@
-import { Observable, Observer } from "rxjs";
+import { interval, Observable, Observer, Subject } from "rxjs";
 
 // Otra forma de crear subscriber
 const observer: Observer<any> = {
@@ -7,32 +7,29 @@ const observer: Observer<any> = {
   complete: () => console.log("[COMPLETE]"),
 };
 
-const interval$ = new Observable<number>((subscriber) => {
-  let count = 0;
-
-  // Create a counter
-  const interval = setInterval(() => {
-    subscriber.next(count);
-    count++;
-  }, 1000);
-
-  setTimeout(() => {
-    subscriber.complete();
-  }, 3000);
+const interval$ = new Observable<number>((subs) => {
+  const intervalId = setInterval(() => subs.next(Math.random()), 1000);
 
   return () => {
-    clearInterval(interval);
+    clearInterval(intervalId);
     console.log("INTERVAL DESTROYED");
   };
 });
 
-const subs = interval$.subscribe(observer);
-const subs1 = interval$.subscribe(observer);
-const subs2 = interval$.subscribe(observer);
+// 1. Multiple casting
+// 2. Too is an Observer
+// 3. next, error and complete
+const subject$ = new Subject();
+const subscription = interval$.subscribe(subject$);
 
-subs.add(subs1).add(subs2);
+const subs1 = subject$.subscribe(observer);
+const subs2 = subject$.subscribe(observer);
 
 setTimeout(() => {
-  subs.unsubscribe();
-  console.log("TIMEOUT COMPLETED");
-}, 3000);
+  subject$.next(10);
+  subject$.complete();
+  subscription.unsubscribe();
+}, 3500);
+
+// const subs1 = interval$.subscribe((rnd) => console.log("[SUBS1]", rnd));
+// const subs2 = interval$.subscribe((rnd) => console.log("[SUBS2]", rnd));
